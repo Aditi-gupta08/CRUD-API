@@ -27,4 +27,11 @@ router.post( '/', (req, res) => {
 });
 
 
+router.post( '/try', (req, res) => {
+  res.json({
+      "msg": "tryy"
+  });
+})
+
+
 module.exports = router;

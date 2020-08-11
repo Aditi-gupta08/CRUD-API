@@ -3,9 +3,12 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var jwt = require('jsonwebtoken');
 
 var courseRouter = require('./routes/course');
 var studentRouter = require('./routes/student');
+var authRouter = require('./routes/auth');
+
 
 var app = express();
 
@@ -19,13 +22,45 @@ app.use(express.urlencoded({ extended: false }));
 // app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, 'public')));
 
+
+app.use( '/api', authRouter);
+
+// Application level middleware
+app.use( (req, res, next) => {
+
+
+  // Get auth header value
+  const bearerHeader = req.headers['authorization'];
+  
+  // Check if bearer is undefined
+  if(typeof bearerHeader !== 'undefined'){
+      const bearer = bearerHeader.split(' ');
+      const bearerToken = bearer[1];
+
+      req.token = bearerToken;
+
+      jwt.verify( req.token, 'secretkey', (err, authData) => {
+
+          if(err) {
+              res.status(400).json({ "error": "Not verified successfully"}); 
+          } else {
+              next();
+          }
+      });
+      
+  } else {
+    res.status(400).json({error: 'Token not found'});
+  }
+  
+});
+
+
+
+/* app.use( '/api', authRouter); */
 app.use( '/api/course', courseRouter );
 app.use( '/api/student', studentRouter );
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
+
 
 // error handler
 app.use(function(err, req, res, next) {
