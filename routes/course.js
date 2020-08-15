@@ -2,10 +2,11 @@ var express = require('express');
 var router = express.Router();
 var COURSES = require('../data/COURSES');
 var STUDENTS = require('../data/STUDENTS');
+var verifyToken = require('../data/verifyToken');
 
 /* GET all courses */
 router.get('/', function(req, res, next) {
-  res.json({'data': COURSES, error: 'error'});
+  res.json({'data': COURSES, error: 'none'});
 });
 
 
@@ -17,23 +18,29 @@ router.get('/:c_id', (req, res, next) => {
     if(found){
       res.json( COURSES.filter( course => course.id === parseInt(req.params.c_id)));
     } else {
-      res.status(400).json( {error: `No course found with the id ${req.params.c_idd}`});
+      res.status(400).json( {error: `No course found with the id ${req.params.c_id}`});
     }
 });
 
 
 /* Add course */
-router.post( '/', (req, res) => {
+router.post( '/', verifyToken, (req, res) => {
 
-  if( !req.body.id || !req.body.name || !req.body.description)
-    return res.status(400).json({error: 'Please provide all 3 details of the course: id, name, desciption'});
+  if( !req.body.id || !req.body.name || !req.body.description || !req.body.availableSlots)
+    return res.status(400).json({error: 'Please provide all 4 details of the course: id, name, desciption, available slots'});
 
+  const c_found = COURSES.some( course => course.id == parseInt(req.body.id));
+
+  if(c_found)
+  {
+    return res.status(400).json({"error": "A course with same id already exists !!"});
+  }
 
   const newCourse = {
       "id": req.body.id,
       "name": req.body.name,
       "description": req.body.description,
-        "enrolledStudents": [],
+      "enrolledStudents": [],
       "availableSlots": req.body.availableSlots
   }
 
@@ -43,10 +50,9 @@ router.post( '/', (req, res) => {
 });
 
 
-
 // Enroll a student into a course
-router.post( '/:c_id/enroll', (req, res) => {
-
+router.post( '/:c_id/enroll', verifyToken, (req, res) => {
+  
   try{
         var c_id = req.params.c_id;
         const c_found = COURSES.some( course => course.id === parseInt(req.params.c_id));
@@ -100,7 +106,7 @@ router.post( '/:c_id/enroll', (req, res) => {
 
 
 // Deregister a student from a course
-router.put( '/:c_id/deregister', (req, res) => {
+router.put( '/:c_id/deregister',  verifyToken, (req, res) => {
 
   try {
       var c_id = req.params.c_id;

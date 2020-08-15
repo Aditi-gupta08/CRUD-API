@@ -1,82 +1,83 @@
 var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken');
+var bcrypt = require('bcrypt');
+var {to} = require('await-to-js');
 
-/* 
-// Verify token (middleware function)
-const verifyToken = (req, res, next) => {
+let user = {};
 
-    // Get auth header value
-    const bearerHeader = req.headers['authorization'];
-  
-    // Check if bearer is undefined
-    if(typeof bearerHeader !== 'undefined'){
-        const bearer = bearerHeader.split(' ');
-        const bearerToken = bearer[1];
-  
-        req.token = bearerToken;
+const passwordHash = async (password) => {
+    const saltRounds = 10;
+    const [err, encrypted_pass ] = await to( bcrypt.hash(password, saltRounds));
 
-        jwt.verify( req.token, 'secretkey', (err, authData) => {
-            if(err) {
-                res.status(400).json({ "error": "Not verified successfully"}); 
-            } else {
-
-                next();
-            }
-        })
-        
-    } else {
-      res.status(400).json({error: 'Token not found'});
+    if(err)
+    {
+        return res.send( {"msg": "Error while generating password hash"});
     }
-} */
+
+    return encrypted_pass;
+};
 
 
 
-router.post('/login', (req, res) => {
+router.post('/signup', async (req, res) => {
+
+    let {userName, email, password} = req.body;
+
+
+    try{
+        const [tmp, encrypted_pass] = await to(passwordHash(password));
+        
+        //const encrypted_pass = password;
+        const newStudent = {
+            userName,
+            email,
+            encrypted_pass
+        } 
+    
+        user = newStudent;
+        
+        res.json({
+            "msg": "Signed Succesfully up !!",
+            user
+        });
+
+    } catch{
+        res.status(400).json({"err": "Error in encryting password! "});
+    }
+
+    
+
+});
+
+
+router.post('/login', async (req, res) => {
+
+    let {email, password} = req.body;
+
+    let [err, isValid] = await to( bcrypt.compare(password, user.encrypted_pass) );
+
+    if(err){
+        return res.status(400).json({ "error": "Some error occured in comparing password"});
+    }
+
+    if(!isValid){
+        return res.status(400).json({ "error": "Incorrect Password !"});
+    }
 
     const newStudent = {
-        userName: req.body.userName,
-        password: req.body.password
+        email,
+        password
     } 
-   
 
     jwt.sign( {newStudent}, 'secretkey', (err, token) => {
         res.json({
             "accessToken" : token,
             "errorrr": err
         });
-       
     });
 
 });
-
-
-router.post('/signup', (req, res) => {
-
-    const newStudent = {
-        userName: req.body.userName,
-        email: req.body.email,
-        password: req.body.password
-    } 
-    
-
-    jwt.sign( {newStudent}, 'secretkey', (err, token) => {
-        res.json({
-            "accessToken" : token,
-            "error": err
-        });
-    });
-
-});
-
-
-
-router.post( '/try', (req, res) => {
-
-    res.send({
-        "msg": "tryy"
-    });
-})
 
 
 module.exports = router;

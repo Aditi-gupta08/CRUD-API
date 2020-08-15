@@ -1,7 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var STUDENTS = require('../data/STUDENTS');
+var verifyToken = require('../data/verifyToken');
 //var uuid = require('uuid');
+
 
 /* GET all students. */
 router.get( '/', (req, res) => {
@@ -10,7 +12,7 @@ router.get( '/', (req, res) => {
 
 
 /* Add student */
-router.post( '/', (req, res) => {
+router.post( '/', verifyToken, (req, res) => {
 
   var newStudent = req.body;
 
@@ -20,18 +22,18 @@ router.post( '/', (req, res) => {
   if( !newStudent.name)
     return res.status(400).json({error: 'New student\'s NAME isn\'t provided'});
 
+  const s_found = STUDENTS.some( stud => stud.id == parseInt(newStudent.id));
+
+  if(s_found)
+  {
+     return res.status(400).json( {"error": "A student with this ID already exists" });   
+  }  
+
 
   STUDENTS.push(newStudent);
   //res.json(STUDENTS);
   res.json( {success: true} );
 });
-
-
-router.post( '/try', (req, res) => {
-  res.json({
-      "msg": "tryy"
-  });
-})
 
 
 module.exports = router;
