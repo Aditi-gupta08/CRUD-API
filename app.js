@@ -24,34 +24,6 @@ app.use(express.urlencoded({ extended: false }));
 
 
 app.use( '/api', authRouter);
-
-// Application level middleware
-/* app.use( (req, res, next) => {
-
-  const bearerHeader = req.headers['authorization'];
-  
-  if(typeof bearerHeader !== 'undefined'){
-      const bearer = bearerHeader.split(' ');
-      const bearerToken = bearer[1];
-
-      req.token = bearerToken;
-
-      jwt.verify( req.token, 'secretkey', (err, authData) => {
-
-          if(err) {
-              res.status(400).json({ "error": "Not verified successfully" }); 
-          } else {
-              req.authdata = authData;
-              next();
-          }
-      });
-      
-  } else {
-    res.status(400).json({error: 'Token not found'});
-  }
-  
-}); */
-
 app.use( '/api/course', courseRouter );
 app.use( '/api/student', studentRouter );
 

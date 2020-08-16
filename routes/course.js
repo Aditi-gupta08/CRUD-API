@@ -3,6 +3,8 @@ var router = express.Router();
 var COURSES = require('../data/COURSES');
 var STUDENTS = require('../data/STUDENTS');
 var verifyToken = require('../data/verifyToken');
+let user = require('../data/user');
+
 
 /* GET all courses */
 router.get('/', function(req, res, next) {
@@ -26,32 +28,40 @@ router.get('/:c_id', (req, res, next) => {
 /* Add course */
 router.post( '/', verifyToken, (req, res) => {
 
-  if( !req.body.id || !req.body.name || !req.body.description || !req.body.availableSlots)
-    return res.status(400).json({error: 'Please provide all 4 details of the course: id, name, desciption, available slots'});
+    let {id, name, description, availableSlots} = req.body;
+    availableSlots = parseInt( availableSlots );
 
-  const c_found = COURSES.some( course => course.id == parseInt(req.body.id));
+    if( !id || !name || !description || !availableSlots)
+      return res.status(400).json({error: 'Please provide all 4 details of the course: id, name, desciption, available slots'});
 
-  if(c_found)
-  {
-    return res.status(400).json({"error": "A course with same id already exists !!"});
-  }
+    if( availableSlots < 0)
+      return res.status(400).json({error: 'Available slots should be positive'});
 
-  const newCourse = {
-      "id": req.body.id,
-      "name": req.body.name,
-      "description": req.body.description,
-      "enrolledStudents": [],
-      "availableSlots": req.body.availableSlots
-  }
+    const c_found = COURSES.some( course => course.id == parseInt(id));
 
-  COURSES.push(newCourse);
-  //res.json(COURSES);
-  res.json( {success: true} );
+    if(c_found)
+    {
+      return res.status(400).json({"error": "A course with same id already exists !!"});
+    }
+
+    const newCourse = {
+        id,
+        name,
+        description,
+        "enrolledStudents": [],
+        availableSlots
+    }
+
+    COURSES.push(newCourse);
+    //res.json(COURSES);
+    res.json( {success: true} );
 });
 
 
 // Enroll a student into a course
 router.post( '/:c_id/enroll', verifyToken, (req, res) => {
+
+  let {student_id} = req.body;
   
   try{
         var c_id = req.params.c_id;
@@ -71,28 +81,27 @@ router.post( '/:c_id/enroll', verifyToken, (req, res) => {
           throw {error: 'No available slots left in this course'};
 
 
-        if( !req.body.student_id)
+        if( !student_id)
             throw {error: 'Please provide a student id to enroll in the course.'};
             
         // Check if the student with that id is present or not
-        var s_id = req.body.student_id;
-        const s_found = STUDENTS.some( stud => stud.id === parseInt(s_id));
+        const s_found = STUDENTS.some( stud => stud.id === parseInt(student_id));
 
         if( !s_found)
         {
-            throw {error: `No student with the id ${s_id} is present`};
+            throw {error: `No student with the id ${student_id} is present`};
         }  
 
 
         // Check if student is already enrolled in the course or not 
-        var ind = enrolled.indexOf(parseInt(s_id));
+        var ind = enrolled.indexOf(parseInt(student_id));
 
         if( ind !=-1)
           throw {error: "Student is already registered!" } ;
         else
         {
           choosed_course.availableSlots-=1;
-          enrolled.push( s_id );
+          enrolled.push( student_id );
           res.send( {success: true});
         }
 
@@ -107,6 +116,8 @@ router.post( '/:c_id/enroll', verifyToken, (req, res) => {
 
 // Deregister a student from a course
 router.put( '/:c_id/deregister',  verifyToken, (req, res) => {
+
+  let {student_id} = req.body;
 
   try {
       var c_id = req.params.c_id;
@@ -124,23 +135,22 @@ router.put( '/:c_id/deregister',  verifyToken, (req, res) => {
       var enrolled = choosed_course.enrolledStudents;
 
 
-      if( !req.body.student_id)
+      if( !student_id)
           throw {error: 'Please provide a student id to deregister from the course.'};
           
       // Check if the student with that id is present or not
-      var s_id = req.body.student_id;
-      const s_found = STUDENTS.some( stud => stud.id === parseInt(s_id));
+      const s_found = STUDENTS.some( stud => stud.id === parseInt(student_id));
 
       if( !s_found)
       {
-        throw {error: `No student with the id ${s_id} is present`};
+        throw {error: `No student with the id ${student_id} is present`};
       }  
 
 
 
       // Check if student is already enrolled in the course or not 
 
-      var ind = enrolled.indexOf(parseInt(s_id));
+      var ind = enrolled.indexOf(parseInt(student_id));
 
       if( ind==-1)
         throw {error: `Student wasn't registered in this course`} ;
@@ -158,7 +168,6 @@ router.put( '/:c_id/deregister',  verifyToken, (req, res) => {
 
 
 });
-
 
 
 module.exports = router;

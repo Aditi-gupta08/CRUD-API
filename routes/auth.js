@@ -3,8 +3,9 @@ var router = express.Router();
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcrypt');
 var {to} = require('await-to-js');
+let user = require('../data/user');
 
-let user = {};
+//let user = {};
 
 const passwordHash = async (password) => {
     const saltRounds = 10;
@@ -24,7 +25,6 @@ router.post('/signup', async (req, res) => {
 
     let {userName, email, password} = req.body;
 
-
     try{
         const [tmp, encrypted_pass] = await to(passwordHash(password));
         
@@ -32,10 +32,12 @@ router.post('/signup', async (req, res) => {
         const newStudent = {
             userName,
             email,
-            encrypted_pass
+            encrypted_pass,
+            login_status: false
         } 
     
         user = newStudent;
+        console.log(user);
         
         res.json({
             "msg": "Signed Succesfully up !!",
@@ -46,9 +48,8 @@ router.post('/signup', async (req, res) => {
         res.status(400).json({"err": "Error in encryting password! "});
     }
 
-    
-
 });
+
 
 
 router.post('/login', async (req, res) => {
@@ -70,6 +71,10 @@ router.post('/login', async (req, res) => {
         password
     } 
 
+    user["login_status"] = true;
+
+    // console.log(user);
+
     jwt.sign( {newStudent}, 'secretkey', (err, token) => {
         res.json({
             "accessToken" : token,
@@ -78,6 +83,24 @@ router.post('/login', async (req, res) => {
     });
 
 });
+
+
+/* router.post('/logout', (req, res) => {
+    if( user.login_status)
+    {
+        user.login_status = false;
+        res.json({"msg": "Logged out succesfully !!"});
+    }
+    else
+    {
+        res.json( { "msg": "User is not logged in!!"});
+    }
+});
+
+
+router.get('/try', (req, res) => {
+    res.json({"user": user});
+}); */
 
 
 module.exports = router;
