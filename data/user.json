@@ -2,7 +2,13 @@
   {
     "userName": "AA",
     "email": "aa@gmail.com",
-    "encrypted_pass": "$2b$10$vfj/02c3YLuPVYPIVke6mevzFN6ZM/h8GDNkGQIFXBf6z1aJlvJP.",
+    "encrypted_pass": "$2b$10$hnC1pTglmCo71dgvUMlSA.3NUGxYvWVlwRSmJnC1mHMGN5ZGOHeGi",
     "login_status": false
+  },
+  {
+    "userName": "AA",
+    "email": "bb@gmail.com",
+    "encrypted_pass": "$2b$10$XgXtPEdpgkG9f9t2hM9d9OKxZinkbsAsKf0ADOe4eR.azKUeV8bZy",
+    "login_status": true
   }
 ]

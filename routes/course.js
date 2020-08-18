@@ -100,7 +100,7 @@ router.put( '/:c_id/enroll', utils.verifyToken, (req, res) => {
             throw {error: 'Please provide a student id to enroll in the course.'};
             
         // Check if the student with that id is present or not
-        const s_found = STUDENTS.some( stud => stud.id === parseInt(student_id));
+        const s_found = STUDENTS.find( stud => stud.id === parseInt(student_id));
 
         if( !s_found)
         {
@@ -115,6 +115,9 @@ router.put( '/:c_id/enroll', utils.verifyToken, (req, res) => {
           throw {error: "Student is already registered!" } ;
         else
         {
+          if(res.cur_user.email != s_found.email)
+              res.status(400).json({"err": "Students can only enroll themselves !" });
+
           choosed_course.availableSlots-=1;
           enrolled.push( student_id );
           fs.writeFileSync(cour_path, JSON.stringify(COURSES, null, 2));
@@ -160,7 +163,7 @@ router.put( '/:c_id/deregister', utils.verifyToken, (req, res) => {
           throw {error: 'Please provide a student id to deregister from the course.'};
           
       // Check if the student with that id is present or not
-      const s_found = STUDENTS.some( stud => stud.id === parseInt(student_id));
+      const s_found = STUDENTS.find( stud => stud.id === parseInt(student_id));
 
       if( !s_found)
       {
@@ -175,6 +178,9 @@ router.put( '/:c_id/deregister', utils.verifyToken, (req, res) => {
         throw {error: `Student wasn't registered in this course`} ;
       else
       {
+        if(res.cur_user.email != s_found.email)
+          res.status(400).json({"err": "Students can only deregister themselves !" });
+
         choosed_course.availableSlots+=1;
         enrolled.splice(ind, 1);
         fs.writeFileSync(cour_path, JSON.stringify(COURSES, null, 2));

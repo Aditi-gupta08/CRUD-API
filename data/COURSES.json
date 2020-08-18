@@ -14,5 +14,19 @@
     "description": "This is DS course",
     "enrolledStudents": [],
     "availableSlots": 1
+  },
+  {
+    "id": 9,
+    "name": "science",
+    "description": "kjncwflkewhnkfj",
+    "enrolledStudents": [],
+    "availableSlots": 2
+  },
+  {
+    "id": 90,
+    "name": "science",
+    "description": "kjncwflkewhnkfj",
+    "enrolledStudents": [],
+    "availableSlots": 2
   }
 ]

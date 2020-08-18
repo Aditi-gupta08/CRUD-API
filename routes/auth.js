@@ -20,13 +20,17 @@ router.post('/signup', async (req, res) => {
         const s_found = STUDENTS.some( stud => stud.email == email);
         if( !s_found)
         {
-            // throw {error: `No student with this email ${email} is present`};
             res.status(400).json({ "err": "No student with this email exist"});
         }
 
-        const [tmp, encrypted_pass] = await to( utils.passwordHash(password));
-        
         let USERS = JSON.parse(fs.readFileSync(user_path));
+        const u_found = USERS.some( user => user.email == email);
+        if(u_found)
+        {
+            res.status(400).json({ "err": "The student is already signed up"});
+        }
+
+        const [tmp, encrypted_pass] = await to( utils.passwordHash(password));
     
         const newStudent = {
             userName,
@@ -35,10 +39,10 @@ router.post('/signup', async (req, res) => {
             login_status: false
         } 
     
-        USERS[0] = newStudent;
+        //USERS[0] = newStudent;
         //console.log(USERS[0]);
 
-        //USERS.push( newStudent );
+        USERS.push( newStudent );
 
         fs.writeFileSync( user_path, JSON.stringify( USERS, null, 2));
         
@@ -59,6 +63,13 @@ router.put('/login', async (req, res) => {
 
     let {email, password} = req.body;
     let USERS = JSON.parse(fs.readFileSync(user_path));
+    let u_found = USERS.find( user => user.email == email);
+
+    if( !u_found)
+        res.status(400).json({ "err": "The student is not signed up !!"});
+
+    if(u_found.login_status == true)
+        res.status(400).json({ "err": "The student is already logged in !!"});
 
     let [err, isValid] = await to( bcrypt.compare(password, USERS[0].encrypted_pass) );
 
@@ -75,9 +86,9 @@ router.put('/login', async (req, res) => {
         password
     } 
 
-    USERS[0]["login_status"] = true;
+    u_found.login_status= true;
 
-    console.log(USERS[0]);
+    //console.log(USERS[0]);
     fs.writeFileSync( user_path, JSON.stringify( USERS, null, 2));
 
     jwt.sign( {newStudent}, 'secretkey', (err, token) => {
@@ -90,19 +101,20 @@ router.put('/login', async (req, res) => {
 });
 
 
-router.put('/logout', (req, res) => {
-    let USERS = JSON.parse(fs.readFileSync(user_path));
+router.put('/logout', utils.verifyToken, (req, res) => {
 
-    if( USERS[0].login_status)
-    {
-        USERS[0].login_status = false;
-        fs.writeFileSync( user_path, JSON.stringify( USERS, null, 2));
-        res.json({"msg": "Logged out succesfully !!"});
-    }
-    else
-    {
-        res.json( { "msg": "User is not logged in!!"});
-    }
+    let USERS = JSON.parse(fs.readFileSync(user_path));
+    console.log(res.cur_user);
+    let {email} = res.cur_user;
+
+    let u_found = USERS.find( user => user.email == email);
+
+    u_found.login_status = false;
+    res.cur_user = {};
+
+    fs.writeFileSync( user_path, JSON.stringify( USERS, null, 2));
+    res.json({"msg": "Logged out succesfully !!"});
+ 
 });
 
 
