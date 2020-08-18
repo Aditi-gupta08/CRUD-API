@@ -1,0 +1,18 @@
+[
+  {
+    "id": 4,
+    "name": "Maths",
+    "description": "This is mathamatics course",
+    "enrolledStudents": [
+      4
+    ],
+    "availableSlots": 3
+  },
+  {
+    "id": 2,
+    "name": "Data structures",
+    "description": "This is DS course",
+    "enrolledStudents": [],
+    "availableSlots": 1
+  }
+]

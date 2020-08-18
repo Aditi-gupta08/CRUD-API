@@ -9,7 +9,6 @@ var courseRouter = require('./routes/course');
 var studentRouter = require('./routes/student');
 var authRouter = require('./routes/auth');
 
-
 var app = express();
 
 // view engine setup

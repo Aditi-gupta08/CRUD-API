@@ -1,39 +1,48 @@
-var express = require('express');
-var router = express.Router();
-var STUDENTS = require('../data/STUDENTS');
-var verifyToken = require('../data/verifyToken');
-//var uuid = require('uuid');
+const express = require('express');
+const router = express.Router();
+const path = require('path');
+const utils = require('../data/utils');
+const fs = require('fs');
+const stu_path = path.join(__dirname, '..', 'data/STUDENTS.json');
+const uuid = require('uuid');
 
 
 /* GET all students. */
 router.get( '/', (req, res) => {
-  res.json({'data': STUDENTS});
+  let STUDENTS = JSON.parse(fs.readFileSync(stu_path));
+  res.json(STUDENTS); 
 });
 
 
 /* Add student */
-router.post( '/', verifyToken, (req, res) => {
+router.post( '/', utils.verifyToken, (req, res) => {
 
-  var newStudent = req.body;
+  var {name, email} = req.body;
 
-  if( !newStudent.id)
-    return res.status(400).json({error: 'New student\'s ID isn\'t provided'});
+  if( !name || !email)
+    return res.status(400).json({error: 'Please provide both details: name, email of the student'});
 
-  if( !newStudent.name)
-    return res.status(400).json({error: 'New student\'s NAME isn\'t provided'});
 
-  const s_found = STUDENTS.some( stud => stud.id == parseInt(newStudent.id));
+  let STUDENTS = JSON.parse(fs.readFileSync(stu_path));
+  const s_found_email = STUDENTS.some( stud => stud.email == email);
 
-  if(s_found)
+  if(s_found_email)
   {
-     return res.status(400).json( {"error": "A student with this ID already exists" });   
-  }  
+     return res.status(400).json( {"error": "A student with this Email ID already exists" });   
+  }
 
+  let newStudent = 
+  {
+    id: uuid.v4(),
+    name,
+    email 
+  }
 
   STUDENTS.push(newStudent);
-  //res.json(STUDENTS);
+  fs.writeFileSync( stu_path, JSON.stringify(STUDENTS, null, 2));
   res.json( {success: true} );
 });
+
 
 
 module.exports = router;
